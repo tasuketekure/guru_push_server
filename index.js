@@ -7,10 +7,9 @@ const cron = require('node-cron');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// VAPID keys
 const vapidKeys = {
-  publicKey: fs.readFileSync('public_key.pem').toString().trim(),
-  privateKey: fs.readFileSync('private_key.pem').toString().trim()
+  publicKey: 'EDDdBS12Xu7xN6Z_tEqOQGyv4UrifBYVsolO-o6M9mwoYvtaDsuVjWroC9WdrqGUu_SNtnEzREfc3g-q9DUY2w',
+  privateKey: 'XnkRzdgbYDYszgoDPNCSKEZjO9e6pvW3472Ykg7jDYs'
 };
 
 webpush.setVapidDetails(
@@ -23,7 +22,6 @@ app.use(bodyParser.json());
 
 const SUBS_FILE = 'subscriptions.json';
 
-// POST /subscribe
 app.post('/subscribe', (req, res) => {
   const sub = req.body;
   let subs = [];
@@ -32,7 +30,6 @@ app.post('/subscribe', (req, res) => {
     subs = JSON.parse(fs.readFileSync(SUBS_FILE));
   }
 
-  // avoid duplicates
   if (!subs.find(s => s.endpoint === sub.endpoint)) {
     subs.push(sub);
     fs.writeFileSync(SUBS_FILE, JSON.stringify(subs, null, 2));
@@ -41,7 +38,6 @@ app.post('/subscribe', (req, res) => {
   res.status(201).json({});
 });
 
-// Every day at 11:30 UTC = 20:30 JST
 cron.schedule('30 11 * * *', () => {
   if (!fs.existsSync(SUBS_FILE)) return;
   const subs = JSON.parse(fs.readFileSync(SUBS_FILE));
