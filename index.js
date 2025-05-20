@@ -8,8 +8,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const vapidKeys = {
-  publicKey: 'BB3Mc9VR_Tj9DypraDusDBQ596f45Qj1FVxEh-nVNEXTaalxFteqwOMa1dI9yW_5DGfGknnDa0tYePw5aW4oAWg',
-  privateKey: '5sfJDchWoVWnqwROxFYxYMVvdrHSEJ49sPn4wvEvI5Q'
+  publicKey: 'BBm8IBcZ82wYnAgTmloLrthk-T_OLmDlau1wKqYQtHxkXIt5rGn_KDRgSeLHDdyfI2t8IzYtSN6rjNNJcaCLa44',
+  privateKey: 'epjNOyEqgJ5NXX8WsYALpUKFuNxBTlJPXMTk5cKjoEc'
 };
 
 webpush.setVapidDetails(
@@ -38,6 +38,27 @@ app.post('/subscribe', (req, res) => {
   res.status(201).json({});
 });
 
+// テスト通知エンドポイント
+app.get('/test', (req, res) => {
+  if (!fs.existsSync(SUBS_FILE)) return res.status(404).send('登録情報が見つかりません');
+  const subs = JSON.parse(fs.readFileSync(SUBS_FILE));
+  if (!subs.length) return res.status(400).send('通知対象がありません');
+
+  const sub = subs[0];
+  const payload = JSON.stringify({
+    title: 'ぐるぐるテスト通知',
+    body: 'これはテストです！ちゃんと届くかな？',
+    icon: 'https://tasuketekure.github.io/guru_brush_app/guru_icon.png'
+  });
+
+  webpush.sendNotification(sub, payload)
+    .then(() => res.send('通知を送信しました！'))
+    .catch(err => {
+      console.error('通知失敗:', err);
+      res.status(500).send('通知に失敗しました');
+    });
+});
+
 cron.schedule('30 11 * * *', () => {
   if (!fs.existsSync(SUBS_FILE)) return;
   const subs = JSON.parse(fs.readFileSync(SUBS_FILE));
@@ -45,7 +66,7 @@ cron.schedule('30 11 * * *', () => {
     webpush.sendNotification(sub, JSON.stringify({
       title: 'ぐるぐる',
       body: '……そろそろ、はみがき……してみない……？',
-      icon: 'https://tasuketekure.github.io/guruguru_app/guruguru_icon.png'
+      icon: 'https://tasuketekure.github.io/guru_brush_app/guru_icon.png'
     })).catch(err => console.error("Failed:", err));
   });
 });
