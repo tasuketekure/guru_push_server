@@ -3,45 +3,38 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>ぐるぐる通知登録</title>
+  <title>プッシュ通知登録</title>
 </head>
 <body>
-  <h2>ぐるぐるから通知を受け取る</h2>
-  <button id="subscribeBtn">通知を登録する</button>
-
+  <h1>プッシュ通知を有効にする</h1>
+  <button id="subscribeButton">通知を登録する</button>
   <script>
-    const publicKey = 'BHE3Z2smqtnqAxQydOUFx3r7I9j4tYiZYo5cGxXKzGRWZP6UDikTcU3CyZ88Emk3GgBQ9mA7aL2JHfgBESWnCjA';
-
-    async function subscribe() {
-      const registration = await navigator.serviceWorker.register('sw.js');
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        alert('通知の許可が必要です');
-        return;
-      }
-
-      const sub = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey)
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      navigator.serviceWorker.register('sw.js').then(function(registration) {
+        document.getElementById('subscribeButton').onclick = function () {
+          Notification.requestPermission().then(function(permission) {
+            if (permission === 'granted') {
+              registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: 'BMDf3mABIQShHIv6n-ExampleKey-YybdL7E='
+              }).then(function(subscription) {
+                fetch('https://guru-push-server.onrender.com/subscribe', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(subscription)
+                }).then(() => {
+                  alert('登録しました！');
+                });
+              });
+            } else {
+              alert('通知が拒否されました');
+            }
+          });
+        };
       });
-
-      await fetch('https://guru-push-server.onrender.com/subscribe', {
-        method: 'POST',
-        body: JSON.stringify(sub),
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      alert('登録完了！20:30に通知が届きます');
+    } else {
+      alert('このブラウザではプッシュ通知が使えません。');
     }
-
-    function urlBase64ToUint8Array(base64String) {
-      const padding = '='.repeat((4 - base64String.length % 4) % 4);
-      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-      const rawData = atob(base64);
-      return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
-    }
-
-    document.getElementById('subscribeBtn').addEventListener('click', subscribe);
   </script>
 </body>
 </html>
