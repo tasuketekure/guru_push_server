@@ -1,6 +1,6 @@
 
-const webpush = require('web-push');
 const express = require('express');
+const webpush = require('web-push');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const cron = require('node-cron');
@@ -8,8 +8,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const vapidKeys = {
-  publicKey: 'BBm8IBcZ82wYnAgTmloLrthk-T_OLmDlau1wKqYQtHxkXIt5rGn_KDRgSeLHDdyfI2t8IzYtSN6rjNNJcaCLa44',
-  privateKey: 'epjNOyEqgJ5NXX8WsYALpUKFuNxBTlJPXMTk5cKjoEc'
+  publicKey: 'BHE3Z2smqtnqAxQydOUFx3r7I9j4tYiZYo5cGxXKzGRWZP6UDikTcU3CyZ88Emk3GgBQ9mA7aL2JHfgBESWnCjA',
+  privateKey: 'YGvjz5yNjWR7MxIg4jjsazjL-x9rUtiY1lDo5RPXXr0'
 };
 
 webpush.setVapidDetails(
@@ -38,7 +38,6 @@ app.post('/subscribe', (req, res) => {
   res.status(201).json({});
 });
 
-// テスト通知エンドポイント
 app.get('/test', (req, res) => {
   if (!fs.existsSync(SUBS_FILE)) return res.status(404).send('登録情報が見つかりません');
   const subs = JSON.parse(fs.readFileSync(SUBS_FILE));
@@ -48,7 +47,7 @@ app.get('/test', (req, res) => {
   const payload = JSON.stringify({
     title: 'ぐるぐるテスト通知',
     body: 'これはテストです！ちゃんと届くかな？',
-    icon: 'https://tasuketekure.github.io/guru_brush_app/guru_icon.png'
+    icon: 'https://tasuketekure.github.io/guruguru_hamigaki/guruguru_icon.png'
   });
 
   webpush.sendNotification(sub, payload)
@@ -66,11 +65,11 @@ cron.schedule('30 11 * * *', () => {
     webpush.sendNotification(sub, JSON.stringify({
       title: 'ぐるぐる',
       body: '……そろそろ、はみがき……してみない……？',
-      icon: 'https://tasuketekure.github.io/guru_brush_app/guru_icon.png'
+      icon: 'https://tasuketekure.github.io/guruguru_hamigaki/guruguru_icon.png'
     })).catch(err => console.error("Failed:", err));
   });
 });
 
 app.listen(PORT, () => {
-  console.log(`ぐるぐる通知サーバーが起動しました http://localhost:${PORT}`);
+  console.log(`ぐるぐる通知サーバーが起動しました！`);
 });

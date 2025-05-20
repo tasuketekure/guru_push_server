@@ -1,7 +1,6 @@
 {
-  "name": "guruguru_push_server",
+  "name": "guruguru-server",
   "version": "1.0.0",
-  "description": "ぐるぐるのはみがき通知サーバー",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
