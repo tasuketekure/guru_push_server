@@ -1,78 +1,37 @@
+const webpush = require("web-push");
+const express = require("express");
+const bodyParser = require("body-parser");
+const path = require("path");
 
-const webpush = require('web-push');
-const express = require('express');
-const bodyParser = require('body-parser');
-const fs = require('fs');
-const cron = require('node-cron');
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-const vapidKeys = {
-  publicKey: 'BHE3Z2smqtnqAxQydOUFx3r7I9j4tYiZYo5cGxXKzGRWZP6UDikTcU3CyZ88Emk3GgBQ9mA7aL2JHfgBESWnCjA',
-  privateKey: 'XnkRzdgbYDYszgoDPNCSKEZjO9e6pvW3472Ykg7jDYs'
-};
-
-webpush.setVapidDetails(
-  'mailto:example@example.com',
-  vapidKeys.publicKey,
-  vapidKeys.privateKey
-);
-
 app.use(bodyParser.json());
 
-const SUBS_FILE = 'subscriptions.json';
+const vapidKeys = {
+  publicKey: "BMbdqOSU4gN7v_gHzO5NT2Gb0Pdgh_A20VSo1DPOb8oGNmTqDmjLCgrH_a7bka5NgQwvhZC9J4H-cbD6KvS0qXs",
+  privateKey: "PT7m1-K_ThgdP0LFsQANZacqaFzCipmVe44rUwLDmng"
+};
 
-app.post('/subscribe', (req, res) => {
-  const sub = req.body;
-  let subs = [];
+webpush.setVapidDetails("mailto:example@example.com", vapidKeys.publicKey, vapidKeys.privateKey);
 
-  if (fs.existsSync(SUBS_FILE)) {
-    subs = JSON.parse(fs.readFileSync(SUBS_FILE));
-  }
+let currentSubscription = null;
 
-  if (!subs.find(s => s.endpoint === sub.endpoint)) {
-    subs.push(sub);
-    fs.writeFileSync(SUBS_FILE, JSON.stringify(subs, null, 2));
-  }
-
-  res.status(201).json({});
+app.post("/subscribe", (req, res) => {
+  currentSubscription = req.body;
+  res.status(201).json({ message: "登録完了" });
 });
 
-cron.schedule('30 11 * * *', () => {
-  if (!fs.existsSync(SUBS_FILE)) return;
-  const subs = JSON.parse(fs.readFileSync(SUBS_FILE));
-  subs.forEach(sub => {
-    webpush.sendNotification(sub, JSON.stringify({
-      title: 'ぐるぐる',
-      body: '……そろそろ、はみがき……してみない……？',
-      icon: 'https://tasuketekure.github.io/guruguru_app/guruguru_icon.png'
-    })).catch(err => console.error("Failed:", err));
-  });
-});
-
-
-
-app.get('/test', (req, res) => {
-  if (!fs.existsSync(SUBS_FILE)) return res.status(404).send('登録情報が見つかりません');
-  const subs = JSON.parse(fs.readFileSync(SUBS_FILE));
-  if (!subs.length) return res.status(400).send('通知対象がありません');
-
-  const sub = subs[0];
+app.get("/test", (req, res) => {
+  if (!currentSubscription) {
+    return res.status(404).send("登録されていません");
+  }
   const payload = JSON.stringify({
-    title: 'ぐるぐるテスト通知',
-    body: 'これはテストです！ちゃんと届くかな？',
-    icon: 'https://tasuketekure.github.io/guruguru_app/guruguru_icon.png'
+    title: "ぐるぐる通知",
+    message: "そろそろはみがきの時間だよ〜"
   });
-
-  webpush.sendNotification(sub, payload)
-    .then(() => res.send('通知を送信しました！'))
-    .catch(err => {
-      console.error('通知失敗:', err);
-      res.status(500).send('通知に失敗しました');
-    });
+  webpush.sendNotification(currentSubscription, payload).catch(console.error);
+  res.send("通知送信しました！");
 });
 
-
-app.listen(PORT, () => {
-  console.log(`ぐるぐる通知サーバーが起動しました http://localhost:${PORT}`);
+app.listen(10000, () => {
+  console.log("ぐるぐる通知サーバーが起動しました http://localhost:10000");
 });
